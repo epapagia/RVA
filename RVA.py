@@ -113,8 +113,8 @@ counter_of_files = 0
 labels = []
 for fv, filev in enumerate(data_original_files):
 #    print filev
-    filev = '52795.txt'
-    call(["./mydemo.sh", data_original_path+filev, filev, str(_DIM_VECTOR), str(_NUM_ITERATIONS)])
+    #filev = '52795.txt'
+    call(["./demo.sh", data_original_path+filev, filev, str(_DIM_VECTOR), str(_NUM_ITERATIONS)])
     W, vocab, ivocab = generate("vocab.txt"+filev.replace('.key','.txt')+str(_DIM_VECTOR)+str(_NUM_ITERATIONS), "vectors"+filev.replace('.key','.txt')+str(_DIM_VECTOR)+str(_NUM_ITERATIONS)+'.txt')
     keyphrases = []
     if filev.endswith(".txt") and filev.replace('.txt','.abstr') in abstract_files:
