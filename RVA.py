@@ -1,34 +1,11 @@
-# -*- coding: utf-8 -*-
 from os import listdir
-import os
-import sys
-import pickle
 from nltk.stem import PorterStemmer
-from nltk.stem import WordNetLemmatizer
 import operator
 import string
 import nltk
 from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-import pickle
 from nltk import ngrams
-from nltk.corpus import wordnet
-# this example uses TopicRank
-from pke import TopicRank 
-import matplotlib.pyplot as plt
 import numpy as np
-import argparse
-from gensim.models import KeyedVectors
-
-import sys
-import codecs
-from sklearn.manifold import TSNE
-
-from scipy.spatial.distance import canberra
-from scipy.spatial.distance import euclidean
-from scipy.spatial.distance import sqeuclidean
-from scipy.spatial.distance import correlation
-import subprocess
 from subprocess import call
 
 
@@ -73,52 +50,13 @@ _STOP_WORDS = [
 'yourselves', 'the', 'zj', 'zi', 'yj', 'yi', 'xi', 'xj', 'xixj', 'xjxi', 'yiyj', 
 'yjyi', 'zizj', 'zjzi']
 
-def stem_tokens(tokens, stemmer):
-    stemmed = []
-    for item in tokens:
-        stemmed.append(ps.stem(filter(lambda y: y in string.printable, item)))
-    return stemmed
-
-def tokenize(text):
-    tokens = nltk.word_tokenize(text)
-    stems = stem_tokens(tokens, ps)
-    return stems
-
 stop = set(stopwords.words('english'))
-
-def is_noun(tag):
-    return tag in ['NN', 'NNS', 'NNP', 'NNPS', 'FW']
-
-
-def is_verb(tag):
-    return tag in ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
-
-
-def is_adverb(tag):
-    return tag in ['RB', 'RBR', 'RBS']
-
-
-def is_adjective(tag):
-    return tag in ['JJ', 'JJR', 'JJS']
-
-
-def penn_to_wn(tag):
-    if is_adjective(tag):
-        return wordnet.ADJ
-    elif is_noun(tag):
-        return wordnet.NOUN
-    elif is_adverb(tag):
-        return wordnet.ADV
-    elif is_verb(tag):
-        return wordnet.VERB
-    return wordnet.NOUN
 
 _WORD_MIN_LENGTH = 3
 _WORD_MAX_LENGTH = 35
-_NUM_ITERATIONS = 50#3000
+_NUM_ITERATIONS = 50
 _DIM_VECTOR = 50
 _FREQUENCY = 1
-_PURE_VECTOR = False
 
 def generate(vocab_file, vectors_file):
 
@@ -151,12 +89,8 @@ def generate(vocab_file, vectors_file):
 data_original_path = '/home/eirini/Projects_Atypon/NLTKTutorial/Krapivin2009/all_docs_abstacts_refined/'
 #'/home/eirini/Projects_Atypon/NLTKTutorial/Krapivin2009/all_docs_abstacts_refined/'
 #'/home/eirini/Projects_Atypon/NLTKTutorial/SemEval2010-Maui/original/SemEval2010/'
-#'/home/eirini/Projects_Atypon/NLTKTutorial/Krapivin2009/all_docs_abstacts_refined/'
 
 abstracts_path = '/home/eirini/Projects_Atypon/NLTKTutorial/Krapivin_Abstracts/'
-#'/home/eirini/Projects_Atypon/NLTKTutorial/Krapivin2009/experiment_abstracts/'
-#'/home/eirini/Projects_Atypon/NLTKTutorial/Krapivin2009/experiment_abstracts/'
-#'/home/eirini/Projects_Atypon/NLTKTutorial/SemEval2010-Maui/experiment_abstracts/'
 #'/home/eirini/Projects_Atypon/NLTKTutorial/Semeval2010_Abstracts/'
 #'/home/eirini/Projects_Atypon/NLTKTutorial/Krapivin_Abstracts/'
 
@@ -179,7 +113,8 @@ counter_of_files = 0
 labels = []
 for fv, filev in enumerate(data_original_files):
 #    print filev
-#    filev = '305093.txt'
+    filev = '52795.txt'
+    call(["./mydemo.sh", data_original_path+filev, filev, str(_DIM_VECTOR), str(_NUM_ITERATIONS)])
     W, vocab, ivocab = generate("vocab.txt"+filev.replace('.key','.txt')+str(_DIM_VECTOR)+str(_NUM_ITERATIONS), "vectors"+filev.replace('.key','.txt')+str(_DIM_VECTOR)+str(_NUM_ITERATIONS)+'.txt')
     keyphrases = []
     if filev.endswith(".txt") and filev.replace('.txt','.abstr') in abstract_files:
@@ -203,43 +138,26 @@ for fv, filev in enumerate(data_original_files):
         dict_word_pos = {}
         with open(abstracts_path+filev.replace('.txt','.abstr'), 'r') as myfile:
             text = myfile.read()
-#            sep_words = [next(myfile) for x in xrange(20)]
-#            text = ' '.join(sep_words)
             lowers = filter(lambda y: y in string.printable, text).lower()
             no_punctuation = lowers.translate(None, string.punctuation)
             temp = no_punctuation.split(' ')
             tempn = nltk.word_tokenize(no_punctuation)
-            tagged = nltk.pos_tag(tempn)
-            tokens_stemmed = []
-            for x in temp:
-                tokens_stemmed.append(ps.stem(filter(lambda y: y in string.printable, x)))
-            for x in tagged:
-                #0 position is a, 1 position is r, 2 position is v
-                if ps.stem(x[0]) not in dict_word_pos.keys():    
-                    dict_word_pos[ps.stem(x[0])] = penn_to_wn(x[1])
-                else:
-                    tmpp = dict_word_pos[ps.stem(x[0])]+penn_to_wn(x[1])
-                    dict_word_pos[ps.stem(x[0])] = tmpp
-            #print dict_word_pos    
+            
+          
         doc_unigrams = []
-        doc_unigrams_stemmed = []
         tokens = []
-        tokens_stemmed_real = []
         bbigrams = []
         ttrigrams = []
-        no_punctuation_stemmed = ''
         no_punctuation_unstemmed = ''
         #print 'Find all candidate unigrams, bigrams and trigrams for',filev.replace('.key','.txt')     
         for x in tempn:
-            no_punctuation_stemmed += ps.stem(filter(lambda y: y in string.printable, x))+' '
             no_punctuation_unstemmed += filter(lambda y: y in string.printable, x)+' '
             tokens.append(filter(lambda y: y in string.printable, x))
         for token in tokens:
             token = token.strip().lower()
             token = token.strip(string.digits)
-            if len(token) >= _WORD_MIN_LENGTH and len(token) <= _WORD_MAX_LENGTH and '!' not in token and '@' not in token and '#' not in token and '$' not in token and '*' not in token and '=' not in token and '+' not in token and '\\x' not in token and '.' not in token and ',' not in token and '?' not in token and '>' not in token and '<' not in token and '&' not in token and not token.isdigit() and token not in _STOP_WORDS and token not in stop and '(' not in token and ')' not in token and '[' not in token and ']' not in token and '{' not in token and '}' not in token and '|' not in token and token not in doc_unigrams:  #and tokens_stemmed.count(ps.stem(token))>=_FREQUENCY                                                      
+            if len(token) >= _WORD_MIN_LENGTH and len(token) <= _WORD_MAX_LENGTH and '!' not in token and '@' not in token and '#' not in token and '$' not in token and '*' not in token and '=' not in token and '+' not in token and '\\x' not in token and '.' not in token and ',' not in token and '?' not in token and '>' not in token and '<' not in token and '&' not in token and not token.isdigit() and token not in _STOP_WORDS and token not in stop and '(' not in token and ')' not in token and '[' not in token and ']' not in token and '{' not in token and '}' not in token and '|' not in token and token not in doc_unigrams:                                                   
                 doc_unigrams.append(token)
-                doc_unigrams_stemmed.append(ps.stem(token))
         print 'number of unigrams', len(doc_unigrams), doc_unigrams
         n = 2
         bigrams = ngrams(tokens, n)
@@ -270,199 +188,34 @@ for fv, filev in enumerate(data_original_files):
                     ttrigrams.append(tritu)
         print 'number of trigrams', len(ttrigrams), ttrigrams 
        
-        print 'number of unique tokens', len(set(temp)), set(temp)
-
         _NUM_KEYWORDS = int(len(set(temp))/3)
         count_words = 0
         final_doc_vector = np.zeros((_DIM_VECTOR))
         word_vector = np.zeros((_DIM_VECTOR))
-        vectors = []
-        words = []
         for word in tempn:
             #print word
-            if word in vocab and word in doc_unigrams:# and word not in words:
+            if word in vocab and word in doc_unigrams:
                 word_vector = W[vocab[word], :]
                 final_doc_vector += word_vector
-                count_words += 1
-            
-                words.append(word)
-                
-                vectors.append(word_vector)
-                #word_vector = model[word.replace('\n', ' ').strip()]
-                #print word_vector
+                count_words += 1 
+              
                 
         final_doc_vector /= count_words 
-        words.append('MEAN_VECTOR')
-        vectors.append(final_doc_vector)
-        #print final_doc_vector
-        
-#                vecs = np.array(vectors)
-#                
-#                
-#                fig_size = [0,0]
-#                fig_size[0] = 30
-#                fig_size[1] = 17    
-#                plt.rcParams["figure.figsize"] = fig_size 
-#                plt.rcParams.update({'font.size': 12})
-#                
-#                tsne = TSNE(n_components=2, random_state=0)
-#                np.set_printoptions(suppress=True)
-#                Y = tsne.fit_transform(vecs[:len(vectors),:])
-#             
-#                plt.scatter(Y[:, 0], Y[:, 1])
-#                flattened = [val for sublist in vdoc_keys[filev] for val in sublist]
-#                for label, x, y in zip(words, Y[:, 0], Y[:, 1]):
-#                    if ps.stem(label).lower() in flattened:    
-#                        plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords='offset points', color = 'red')
-#                    elif label=='MEAN_VECTOR':
-#                        plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords='offset points', color = 'green')
-#                    else:
-#                        plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords='offset points')
-#                plt.show()
-        
+
         print 'Calculation of cosine similarity between mean_vec and every word'
         dict_cand_sim = {}
-        candidates = []
-        similarities = []
-        canber = []
-        euclid = []
-        seuclid = []
-        corel = []
         for word in tempn:
             #print word
             if word in vocab and word in doc_unigrams:
                 
                 word_vector = W[vocab[word], :]  
-                #word_vector = model[word.replace('\n', ' ').strip()] 
-                #print word_vector 
-                #print (np.linalg.norm(final_doc_vector)* np.linalg.norm(word_vector)), 'np.linalg.norm(final_doc_vector)* np.linalg.norm(word_vector)'                   
                 if np.linalg.norm(final_doc_vector)* np.linalg.norm(word_vector)>0.0:
-                    candidates.append(word)
-                    similarities.append(np.dot(final_doc_vector, word_vector)/(np.linalg.norm(final_doc_vector)* np.linalg.norm(word_vector)))
-                    dict_cand_sim[word] = np.dot(final_doc_vector, word_vector)/(np.linalg.norm(final_doc_vector)* np.linalg.norm(word_vector))
-                else:
-                    candidates.append(word)
-                    similarities.append(0.0)
-                    dict_cand_sim[word] = np.dot(final_doc_vector, word_vector)/(np.linalg.norm(final_doc_vector)* np.linalg.norm(word_vector))
-                    
-                canber.append(canberra(final_doc_vector, word_vector))
-                euclid.append(euclidean(final_doc_vector, word_vector))
-                seuclid.append(sqeuclidean(final_doc_vector, word_vector))
-                corel.append(correlation(final_doc_vector, word_vector))
-        
+                    dict_cand_sim[str(word)] = np.dot(final_doc_vector, word_vector)/(np.linalg.norm(final_doc_vector)* np.linalg.norm(word_vector))
+                else:                   
+                    dict_cand_sim[str(word)] = 0.0
+
         kphs = vdoc_keys[filev.replace('.txt','.key')]
-        flattened_kphs = [val for sublist in kphs for val in sublist]
-        
-        print 'cosine similarity'
-        keyphr_sim = []
-        for f in flattened_kphs:
-            if f in candidates:
-                #print candidates[candidates.index(f)], similarities[candidates.index(f)]
-                keyphr_sim.append(similarities[candidates.index(f)])
-            
-        not_keyphr_sim = []
-        for f in candidates:
-            if f not in flattened_kphs:
-                #print f, similarities[candidates.index(f)]
-                not_keyphr_sim.append(similarities[candidates.index(f)])
-        
-        
-        data_to_plot = [keyphr_sim, not_keyphr_sim]
-        plt.rcParams.update({'font.size': 13})
-        # Create a figure instance
-        fig = plt.figure(1, figsize=(9, 6))
-        # Create an axes instance
-        ax = fig.add_subplot(111)
-        
-        # Create the boxplot
-        bp = ax.boxplot(data_to_plot)
-        ax.set_xticklabels(['keywords', 'not keywords'])
-        plt.title('Cosine Similarity')
-        plt.show()
-        
-        print 'canberra distance'
-        keyphr_sim = []
-        for f in flattened_kphs:
-            if f in candidates:
-                keyphr_sim.append(canber[candidates.index(f)])
-            
-        not_keyphr_sim = []
-        for f in candidates:
-            if f not in flattened_kphs:
-                not_keyphr_sim.append(canber[candidates.index(f)])
-        
-        data_to_plot = [keyphr_sim, not_keyphr_sim]
-
-        fig = plt.figure(1, figsize=(9, 6))
-        ax = fig.add_subplot(111)
-        bp = ax.boxplot(data_to_plot)
-        ax.set_xticklabels(['keywords', 'not keywords'])
-        plt.title('Canberra Distance')
-        plt.show()
-#                
-#                
-#                
-        print 'euclidean distance'
-        keyphr_sim = []
-        for f in flattened_kphs:
-            if f in candidates:
-                keyphr_sim.append(euclid[candidates.index(f)])
-            
-        not_keyphr_sim = []
-        for f in candidates:
-            if f not in flattened_kphs:
-                not_keyphr_sim.append(euclid[candidates.index(f)])
-        
-        data_to_plot = [keyphr_sim, not_keyphr_sim]
-
-        fig = plt.figure(1, figsize=(9, 6))
-        ax = fig.add_subplot(111)        
-        bp = ax.boxplot(data_to_plot)
-        ax.set_xticklabels(['keywords', 'not keywords'])
-        plt.title('Euclidean Distance')
-        plt.show()
-#                
-#                print 'sqeuclidean distance'
-#                keyphr_sim = []
-#                for f in flattened_kphs:
-#                    if f in candidates:
-#                        keyphr_sim.append(seuclid[candidates.index(f)])
-#                    
-#                not_keyphr_sim = []
-#                for f in candidates:
-#                    if f not in flattened_kphs:
-#                        not_keyphr_sim.append(seuclid[candidates.index(f)])
-#                
-#                data_to_plot = [keyphr_sim, not_keyphr_sim]
-#        
-#                fig = plt.figure(1, figsize=(9, 6))
-#                ax = fig.add_subplot(111)        
-#                bp = ax.boxplot(data_to_plot)
-#                ax.set_xticklabels(['keywords', 'not keywords'])
-#                plt.show()
-#                
-#                print 'correlation'
-#                keyphr_sim = []
-#                for f in flattened_kphs:
-#                    if f in candidates:
-#                        keyphr_sim.append(corel[candidates.index(f)])
-#                    
-#                not_keyphr_sim = []
-#                for f in candidates:
-#                    if f not in flattened_kphs:
-#                        not_keyphr_sim.append(corel[candidates.index(f)])
-#                
-#                data_to_plot = [keyphr_sim, not_keyphr_sim]
-#        
-#                fig = plt.figure(1, figsize=(9, 6))
-#                ax = fig.add_subplot(111)        
-#                bp = ax.boxplot(data_to_plot)
-#                ax.set_xticklabels(['keywords', 'not keywords'])
-#                plt.show()
-#                
-#                print 'Scoring candidates...'
-#                print 'First score trigrams'
-#                
+        flattened_kphs = [val for sublist in kphs for val in sublist]                  
 
         for tri in ttrigrams:
             token1 = tri[0]
@@ -475,7 +228,7 @@ for fv, filev in enumerate(data_original_files):
                 score += dict_cand_sim[token2]
             if token3 in dict_cand_sim.keys():
                 score += dict_cand_sim[token3]  
-            dict_cand_sim[token1+' '+token2+' '+token3] = score   
+            dict_cand_sim[str(token1+' '+token2+' '+token3)] = score   
                 
         for bi in bbigrams:
             token1 = bi[0]
@@ -485,13 +238,8 @@ for fv, filev in enumerate(data_original_files):
                 score += dict_cand_sim[token1]
             if token2 in dict_cand_sim.keys():
                 score += dict_cand_sim[token2]
-            dict_cand_sim[token1+' '+token2] = score
-        
-#        dict_cand_sim_final = {}
-#        for kc, vc in dict_cand_sim.iteritems():
-#            dict_cand_sim_final[ps.stem(kc)] = vc
-        
-        
+            dict_cand_sim[str(token1+' '+token2)] = score
+               
         sorted_x = sorted(dict_cand_sim.items(), key=operator.itemgetter(1))
         sorted_x = sorted_x[-_NUM_KEYWORDS:]
         
@@ -502,116 +250,10 @@ for fv, filev in enumerate(data_original_files):
             sxp = sx[0].split(' ')
             local_list = []
             for sxpi in sxp:
-                local_list.append(ps.stem(sxpi))
+                local_list.append(str(ps.stem(sxpi)))
             final_set.append(local_list)
-        
         print final_set
-        
-        
-        found = 0
-        true_pos = 0
-        false_pos = 0
-        false_neg = 0      
-
-        for inst_id, inst in enumerate(final_set):
-            kphs = vdoc_keys[filev.replace('.txt','.key')]
-            flattened_kphs = [val for sublist in kphs for val in sublist]
-            flagTP = False
-            if len(inst)==1:
-                if inst[0] in flattened_kphs:
-                    true_pos += 1 
-                else:
-                    false_pos += 1
-            else:
-                if len(inst)==2:
-                    inst1 = [inst[0],inst[1]]
-                    inst2 = [inst[1],inst[0]]
-                    for kf in kphs: # check if the candidate exist as a keyphrase bigram
-                        flagTP = False
-                        if inst[0] in kf and inst[1] in kf:
-                            true_pos += 1
-                            flagTP = True
-                            break 
-                    if flagTP==False:# check if the candidate's words exist as a keyword
-                        if inst[0] in kphs:
-                            true_pos += 1 
-                            flagTP = True
-                        if inst[1] in kphs:
-                            true_pos += 1 
-                            flagTP = True
-                    if flagTP==False:
-                        false_pos += 1
-                elif len(inst)==3:
-                    for kf in kphs:
-                        flagTP = False
-                        if inst[0] in kf and inst[1] in kf and inst[2] in kf:
-                            true_pos += 1
-                            flagTP = True
-                            break
-                    if flagTP==False:
-                        if inst[0] in kphs:
-                            true_pos += 1 
-                            flagTP = True
-                        if inst[1] in kphs:
-                            true_pos += 1 
-                            flagTP = True
-                        if inst[2] in kphs:
-                            true_pos += 1 
-                            flagTP = True
-                    if flagTP==False:
-                        for row in kphs:
-                            if (inst[0] in row and inst[1] in row and len(row)==2):
-                                true_pos += 1 
-                                flagTP = True
-                            if (inst[0] in row and inst[2] in row and len(row)==2):
-                                true_pos += 1 
-                                flagTP = True
-                            if (inst[2] in row and inst[1] in row and len(row)==2):
-                                true_pos += 1 
-                                flagTP = True    
-                    if flagTP==False:
-                        false_pos += 1                  
-            
-        for inst_id, inst in enumerate(vdoc_keys[filev.replace('.txt','.key')]):
-            flattened = [val for sublist in final_set for val in sublist]
-            flagTP = False
-            if len(inst)==1:
-                if inst[0] not in flattened:
-                    false_neg += 1
-            else:
-                if len(inst)==2:
-                    for kc in final_set:
-                        flagTP = False
-                        if inst[0] in kc and inst[1] in kc:
-                            flagTP = True
-                            break
-                    if flagTP==False:
-                        false_neg += 1
-                else:
-                    if len(inst)==3:
-                        for kc in final_set:
-                            flagTP = False
-                            if inst[0] in kc and inst[1] in kc and inst[2] in kc:
-                                flagTP = True
-                                break
-                        if flagTP==False:
-                            false_neg += 1 
-        print '---------vector size', _DIM_VECTOR, 'iterations', _NUM_ITERATIONS, '-----------'
-        p=0.0
-        if (true_pos+false_pos)>0:
-            p = float(true_pos)/(true_pos+false_pos)
-        prec_test2.append(p)
-        print p
-        r=0.0
-        if (true_pos+false_neg)>0:
-            r = float(true_pos)/(true_pos+false_neg)  
-        rec_test2.append(r)
-        print r
-        f1 = 0.0
-        if (p+r)>0:
-            f1 = 2.0*p*r/(p+r)
-        fm_test2.append(f1)    
-        print f1
+               
         
         true_pos_strict = 0
         true_pos_strict = 0
@@ -644,59 +286,9 @@ for fv, filev in enumerate(data_original_files):
             f1s = 2.0*prs*rs/(prs+rs)
         fm_test_strict.append(f1s)
         print f1s
+      
         
         print 'mean precision strict', sum(prec_test_strict) / float(len(prec_test_strict))
         print 'mean recall strict', sum(rec_test_strict) / float(len(rec_test_strict))
         print 'mean f-measure strict', sum(fm_test_strict) / float(len(fm_test_strict))        
 
-            
-        print 'mean precision', sum(prec_test2) / float(len(prec_test2))
-        print 'mean recall', sum(rec_test2) / float(len(rec_test2))
-        print 'mean f-measure', sum(fm_test2) / float(len(fm_test2))   
-    
-fig_size = [0,0]
-fig_size[0] = 18
-fig_size[1] = 8    
-plt.rcParams["figure.figsize"] = fig_size 
-plt.rcParams.update({'font.size': 11})
-t = np.arange(len(fm_test2))
-s = fm_test2
-plt.scatter(t,s)#, color='k', s=25, marker="o")
-plt.plot(t, s)
-plt.xlabel('Files')
-plt.ylabel('f-measure')
-plt.xticks(t,labels,rotation=65)
-plt.title('F-measure')
-plt.legend()
-plt.show() 
-
-
-t = np.arange(len(rec_test2))
-s = rec_test2
-plt.scatter(t,s)#, color='k', s=25, marker="o")
-plt.plot(t, s)
-plt.xlabel('Files')
-plt.ylabel('Recall')
-plt.xticks(t,labels,rotation=65)
-plt.title('Recall')
-plt.legend()
-plt.show() 
-
-
-t = np.arange(len(prec_test2))
-s = prec_test2
-plt.scatter(t,s)#, color='k', s=25, marker="o")
-plt.plot(t, s)
-plt.xlabel('Files')
-plt.ylabel('Precision')
-plt.xticks(t,labels,rotation=65)
-plt.title('Precision')
-plt.legend()
-plt.show()   
-print 'Finally'            
-print 'mean precision', sum(prec_test2) / float(len(prec_test2))
-print 'mean recall', sum(rec_test2) / float(len(rec_test2))
-print 'mean f-measure', sum(fm_test2) / float(len(fm_test2))        
-print 'mean precision strict', sum(prec_test_strict) / float(len(prec_test_strict))
-print 'mean recall strict', sum(rec_test_strict) / float(len(rec_test_strict))
-print 'mean f-measure strict', sum(fm_test_strict) / float(len(fm_test_strict))
