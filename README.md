@@ -14,5 +14,5 @@ $ cd glove && make
 
 Replace the existing demo.sh file in the glove project with the demo.sh file of the current project.
 
-Run RVA.py
+Run RVA.py providing the folder with the corresponding fulltexts and abstracts, respectively, as arguments.
 
