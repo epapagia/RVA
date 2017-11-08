@@ -86,13 +86,9 @@ def generate(vocab_file, vectors_file):
     return (W_norm, vocab, ivocab)
 
 
-data_original_path = '/home/eirini/Projects_Atypon/NLTKTutorial/Krapivin2009/all_docs_abstacts_refined/'
-#'/home/eirini/Projects_Atypon/NLTKTutorial/Krapivin2009/all_docs_abstacts_refined/'
-#'/home/eirini/Projects_Atypon/NLTKTutorial/SemEval2010-Maui/original/SemEval2010/'
+file_path = ''
 
-abstracts_path = '/home/eirini/Projects_Atypon/NLTKTutorial/Krapivin_Abstracts/'
-#'/home/eirini/Projects_Atypon/NLTKTutorial/Semeval2010_Abstracts/'
-#'/home/eirini/Projects_Atypon/NLTKTutorial/Krapivin_Abstracts/'
+file_name = ''
 
 print 'Read data files...'
 data_original_files = [f for f in listdir(data_original_path)]
@@ -110,185 +106,127 @@ prec_test_strict = []
 rec_test_strict = []
 fm_test_strict = [] 
 counter_of_files = 0
-labels = []
-for fv, filev in enumerate(data_original_files):
-#    print filev
-    filev = '52795.txt'
-    call(["./mydemo.sh", data_original_path+filev, filev, str(_DIM_VECTOR), str(_NUM_ITERATIONS)])
-    W, vocab, ivocab = generate("vocab.txt"+filev.replace('.key','.txt')+str(_DIM_VECTOR)+str(_NUM_ITERATIONS), "vectors"+filev.replace('.key','.txt')+str(_DIM_VECTOR)+str(_NUM_ITERATIONS)+'.txt')
-    keyphrases = []
-    if filev.endswith(".txt") and filev.replace('.txt','.abstr') in abstract_files:
-        labels.append(filev.replace('.txt',''))
 
-        print 'Find keyphrases for file', filev, '...'
-        with open(data_original_path+filev.replace('.txt','.key'), 'r') as fkey:   
-            for line in fkey:
-                line_words = line.replace('\n', '').replace('\r', '').lower().split(" ")
-                keyw = ''
-                for lw in line_words:
-                    lw = filter(lambda y: y in string.printable, lw).lower()
-                    keyw += ps.stem(lw.decode('latin-1').encode("utf-8").decode('utf-8'))+' ' 
-                if str(keyw).translate(None, string.punctuation).strip().split(' ') not in keyphrases:
-                    keyphrases.append(str(keyw).translate(None, string.punctuation).strip().split(' '))
-        vdoc_keys[filev.replace('.txt','.key')] = keyphrases    
-        print vdoc_keys[filev.replace('.txt','.key')]
-        
-        counter_of_files += 1
-        print counter_of_files, 'Tokens for file', filev.replace('.key','.txt'), '...'
-        dict_word_pos = {}
-        with open(abstracts_path+filev.replace('.txt','.abstr'), 'r') as myfile:
-            text = myfile.read()
-            lowers = filter(lambda y: y in string.printable, text).lower()
-            no_punctuation = lowers.translate(None, string.punctuation)
-            temp = no_punctuation.split(' ')
-            tempn = nltk.word_tokenize(no_punctuation)
-            
-          
-        doc_unigrams = []
-        tokens = []
-        bbigrams = []
-        ttrigrams = []
-        no_punctuation_unstemmed = ''
-        #print 'Find all candidate unigrams, bigrams and trigrams for',filev.replace('.key','.txt')     
-        for x in tempn:
-            no_punctuation_unstemmed += filter(lambda y: y in string.printable, x)+' '
-            tokens.append(filter(lambda y: y in string.printable, x))
-        for token in tokens:
-            token = token.strip().lower()
-            token = token.strip(string.digits)
-            if len(token) >= _WORD_MIN_LENGTH and len(token) <= _WORD_MAX_LENGTH and '!' not in token and '@' not in token and '#' not in token and '$' not in token and '*' not in token and '=' not in token and '+' not in token and '\\x' not in token and '.' not in token and ',' not in token and '?' not in token and '>' not in token and '<' not in token and '&' not in token and not token.isdigit() and token not in _STOP_WORDS and token not in stop and '(' not in token and ')' not in token and '[' not in token and ']' not in token and '{' not in token and '}' not in token and '|' not in token and token not in doc_unigrams:                                                   
-                doc_unigrams.append(token)
-        print 'number of unigrams', len(doc_unigrams), doc_unigrams
-        n = 2
-        bigrams = ngrams(tokens, n)
-        for bi in bigrams:
-            token1 = filter(lambda x: x in string.printable, bi[0])
-            token1 = token1.lower()
-            token2 = filter(lambda x: x in string.printable, bi[1])
-            token2 = token2.lower()
-            if token1 in doc_unigrams and token2 in doc_unigrams and not (len(token1)<=3 and len(token2)<=3):
-                big = filter(lambda y: y in string.printable, token1.lower())+' '+filter(lambda y: y in string.printable, token2.lower())
-                bitu = (filter(lambda y: y in string.printable, token1.lower()), filter(lambda y: y in string.printable, token2.lower()))
-                if no_punctuation_unstemmed.count(big.strip())>=(_FREQUENCY):
-                    bbigrams.append(bitu)
-        print 'number of bigrams', len(bbigrams)
-        n = 3
-        trigrams = ngrams(tokens, n)
-        for tri in trigrams:
-            token1 = filter(lambda x: x in string.printable, tri[0])
-            token1 = token1.lower()
-            token2 = filter(lambda x: x in string.printable, tri[1])
-            token2 = token2.lower()
-            token3 = filter(lambda x: x in string.printable, tri[2])
-            token3 = token3.lower()
-            if token1 in doc_unigrams and token2 in doc_unigrams and token3 in doc_unigrams and not (len(token1)<=3 and len(token2)<=3 and len(token3)<=3):
-                big = filter(lambda y: y in string.printable, token1.lower())+' '+filter(lambda y: y in string.printable, token2.lower())+' '+filter(lambda y: y in string.printable, token3.lower())
-                tritu = (filter(lambda y: y in string.printable, token1.lower()), filter(lambda y: y in string.printable, token2.lower()), filter(lambda y: y in string.printable, token3.lower()))
-                if no_punctuation_unstemmed.count(big.strip())>=(_FREQUENCY):
-                    ttrigrams.append(tritu)
-        print 'number of trigrams', len(ttrigrams), ttrigrams 
-       
-        _NUM_KEYWORDS = int(len(set(temp))/3)
-        count_words = 0
-        final_doc_vector = np.zeros((_DIM_VECTOR))
-        word_vector = np.zeros((_DIM_VECTOR))
-        for word in tempn:
-            #print word
-            if word in vocab and word in doc_unigrams:
-                word_vector = W[vocab[word], :]
-                final_doc_vector += word_vector
-                count_words += 1 
-              
-                
-        final_doc_vector /= count_words 
 
-        print 'Calculation of cosine similarity between mean_vec and every word'
-        dict_cand_sim = {}
-        for word in tempn:
-            #print word
-            if word in vocab and word in doc_unigrams:
-                
-                word_vector = W[vocab[word], :]  
-                if np.linalg.norm(final_doc_vector)* np.linalg.norm(word_vector)>0.0:
-                    dict_cand_sim[str(word)] = np.dot(final_doc_vector, word_vector)/(np.linalg.norm(final_doc_vector)* np.linalg.norm(word_vector))
-                else:                   
-                    dict_cand_sim[str(word)] = 0.0
+call(["./demo.sh", file_path, file_name, str(_DIM_VECTOR), str(_NUM_ITERATIONS)])
+W, vocab, ivocab = generate("vocab.txt"+file_name.replace('.key','.txt')+str(_DIM_VECTOR)+str(_NUM_ITERATIONS), "vectors"+file_name.replace('.key','.txt')+str(_DIM_VECTOR)+str(_NUM_ITERATIONS)+'.txt')
 
-        kphs = vdoc_keys[filev.replace('.txt','.key')]
-        flattened_kphs = [val for sublist in kphs for val in sublist]                  
-
-        for tri in ttrigrams:
-            token1 = tri[0]
-            token2 = tri[1]
-            token3 = tri[2]
-            score = 0.0
-            if token1 in dict_cand_sim.keys():
-                score += dict_cand_sim[token1]
-            if token2 in dict_cand_sim.keys():
-                score += dict_cand_sim[token2]
-            if token3 in dict_cand_sim.keys():
-                score += dict_cand_sim[token3]  
-            dict_cand_sim[str(token1+' '+token2+' '+token3)] = score   
-                
-        for bi in bbigrams:
-            token1 = bi[0]
-            token2 = bi[1]
-            score = 0.0
-            if token1 in dict_cand_sim.keys():
-                score += dict_cand_sim[token1]
-            if token2 in dict_cand_sim.keys():
-                score += dict_cand_sim[token2]
-            dict_cand_sim[str(token1+' '+token2)] = score
-               
-        sorted_x = sorted(dict_cand_sim.items(), key=operator.itemgetter(1))
-        sorted_x = sorted_x[-_NUM_KEYWORDS:]
+if file_name.endswith(".txt") and file_name.replace('.txt','.abstr') in abstract_files:
+    
+    counter_of_files += 1
+    print counter_of_files, 'Tokens for file', file_name.replace('.key','.txt'), '...'
+    dict_word_pos = {}
+    with open(file_path+file_name.replace('.txt','.abstr'), 'r') as myfile:
+        text = myfile.read()
+        lowers = filter(lambda y: y in string.printable, text).lower()
+        no_punctuation = lowers.translate(None, string.punctuation)
+        temp = no_punctuation.split(' ')
+        tempn = nltk.word_tokenize(no_punctuation)
         
-        print sorted_x
-        
-        final_set = []
-        for sx in sorted_x:
-            sxp = sx[0].split(' ')
-            local_list = []
-            for sxpi in sxp:
-                local_list.append(str(ps.stem(sxpi)))
-            final_set.append(local_list)
-        print final_set
-               
-        
-        true_pos_strict = 0
-        true_pos_strict = 0
-        false_pos_strict = 0
-        false_neg_strict = 0 
-        flattened_kphs = [val for sublist in vdoc_keys[filev.replace('.txt','.key')] for val in sublist]
-        print set(flattened_kphs)
-        flattened_cand = [val for sublist in final_set for val in sublist]
-        print set(flattened_cand)
-        true_pos_strict = len(set(flattened_kphs).intersection(flattened_cand))
-        print true_pos_strict
-        false_pos_strict = len(set([x for x in flattened_cand if x not in flattened_kphs]))
-        print false_pos_strict
-        false_neg_strict = len(set([x for x in flattened_kphs if x not in flattened_cand]))
-        print false_neg_strict
-        prs=0.0
-        if (true_pos_strict+false_pos_strict)>0:
-            prs = float(true_pos_strict)/(true_pos_strict+false_pos_strict)
-        prec_test_strict.append(prs)
-        print prs
-        
-        rs=0.0
-        if (true_pos_strict+false_neg_strict)>0:
-            rs = float(true_pos_strict)/(true_pos_strict+false_neg_strict)     
-        rec_test_strict.append(rs)
-        print rs
-        
-        f1s = 0.0
-        if (prs+rs)>0:
-            f1s = 2.0*prs*rs/(prs+rs)
-        fm_test_strict.append(f1s)
-        print f1s
       
-        
-        print 'mean precision strict', sum(prec_test_strict) / float(len(prec_test_strict))
-        print 'mean recall strict', sum(rec_test_strict) / float(len(rec_test_strict))
-        print 'mean f-measure strict', sum(fm_test_strict) / float(len(fm_test_strict))        
+    doc_unigrams = []
+    tokens = []
+    bbigrams = []
+    ttrigrams = []
+    no_punctuation_unstemmed = ''
+    #print 'Find all candidate unigrams, bigrams and trigrams for',filev.replace('.key','.txt')     
+    for x in tempn:
+        no_punctuation_unstemmed += filter(lambda y: y in string.printable, x)+' '
+        tokens.append(filter(lambda y: y in string.printable, x))
+    for token in tokens:
+        token = token.strip().lower()
+        token = token.strip(string.digits)
+        if len(token) >= _WORD_MIN_LENGTH and len(token) <= _WORD_MAX_LENGTH and '!' not in token and '@' not in token and '#' not in token and '$' not in token and '*' not in token and '=' not in token and '+' not in token and '\\x' not in token and '.' not in token and ',' not in token and '?' not in token and '>' not in token and '<' not in token and '&' not in token and not token.isdigit() and token not in _STOP_WORDS and token not in stop and '(' not in token and ')' not in token and '[' not in token and ']' not in token and '{' not in token and '}' not in token and '|' not in token and token not in doc_unigrams:                                                   
+            doc_unigrams.append(token)
+    print 'number of unigrams', len(doc_unigrams), doc_unigrams
+    n = 2
+    bigrams = ngrams(tokens, n)
+    for bi in bigrams:
+        token1 = filter(lambda x: x in string.printable, bi[0])
+        token1 = token1.lower()
+        token2 = filter(lambda x: x in string.printable, bi[1])
+        token2 = token2.lower()
+        if token1 in doc_unigrams and token2 in doc_unigrams and not (len(token1)<=3 and len(token2)<=3):
+            big = filter(lambda y: y in string.printable, token1.lower())+' '+filter(lambda y: y in string.printable, token2.lower())
+            bitu = (filter(lambda y: y in string.printable, token1.lower()), filter(lambda y: y in string.printable, token2.lower()))
+            if no_punctuation_unstemmed.count(big.strip())>=(_FREQUENCY):
+                bbigrams.append(bitu)
+    print 'number of bigrams', len(bbigrams)
+    n = 3
+    trigrams = ngrams(tokens, n)
+    for tri in trigrams:
+        token1 = filter(lambda x: x in string.printable, tri[0])
+        token1 = token1.lower()
+        token2 = filter(lambda x: x in string.printable, tri[1])
+        token2 = token2.lower()
+        token3 = filter(lambda x: x in string.printable, tri[2])
+        token3 = token3.lower()
+        if token1 in doc_unigrams and token2 in doc_unigrams and token3 in doc_unigrams and not (len(token1)<=3 and len(token2)<=3 and len(token3)<=3):
+            big = filter(lambda y: y in string.printable, token1.lower())+' '+filter(lambda y: y in string.printable, token2.lower())+' '+filter(lambda y: y in string.printable, token3.lower())
+            tritu = (filter(lambda y: y in string.printable, token1.lower()), filter(lambda y: y in string.printable, token2.lower()), filter(lambda y: y in string.printable, token3.lower()))
+            if no_punctuation_unstemmed.count(big.strip())>=(_FREQUENCY):
+                ttrigrams.append(tritu)
+    print 'number of trigrams', len(ttrigrams), ttrigrams 
+   
+    _NUM_KEYWORDS = int(len(set(temp))/3)
+    count_words = 0
+    final_doc_vector = np.zeros((_DIM_VECTOR))
+    word_vector = np.zeros((_DIM_VECTOR))
+    for word in tempn:
+        #print word
+        if word in vocab and word in doc_unigrams:
+            word_vector = W[vocab[word], :]
+            final_doc_vector += word_vector
+            count_words += 1 
+          
+            
+    final_doc_vector /= count_words 
 
+    print 'Calculation of cosine similarity between mean_vec and every word'
+    dict_cand_sim = {}
+    for word in tempn:
+        #print word
+        if word in vocab and word in doc_unigrams:
+            
+            word_vector = W[vocab[word], :]  
+            if np.linalg.norm(final_doc_vector)* np.linalg.norm(word_vector)>0.0:
+                dict_cand_sim[str(word)] = np.dot(final_doc_vector, word_vector)/(np.linalg.norm(final_doc_vector)* np.linalg.norm(word_vector))
+            else:                   
+                dict_cand_sim[str(word)] = 0.0
+            
+    for tri in ttrigrams:
+        token1 = tri[0]
+        token2 = tri[1]
+        token3 = tri[2]
+        score = 0.0
+        if token1 in dict_cand_sim.keys():
+            score += dict_cand_sim[token1]
+        if token2 in dict_cand_sim.keys():
+            score += dict_cand_sim[token2]
+        if token3 in dict_cand_sim.keys():
+            score += dict_cand_sim[token3]  
+        dict_cand_sim[str(token1+' '+token2+' '+token3)] = score   
+            
+    for bi in bbigrams:
+        token1 = bi[0]
+        token2 = bi[1]
+        score = 0.0
+        if token1 in dict_cand_sim.keys():
+            score += dict_cand_sim[token1]
+        if token2 in dict_cand_sim.keys():
+            score += dict_cand_sim[token2]
+        dict_cand_sim[str(token1+' '+token2)] = score
+           
+    sorted_x = sorted(dict_cand_sim.items(), key=operator.itemgetter(1))
+    sorted_x = sorted_x[-_NUM_KEYWORDS:]
+    
+    print sorted_x
+    
+    final_set = []
+    for sx in sorted_x:
+        sxp = sx[0].split(' ')
+        local_list = []
+        for sxpi in sxp:
+            local_list.append(str(ps.stem(sxpi)))
+        final_set.append(local_list)
+    print final_set
