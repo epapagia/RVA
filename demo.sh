@@ -15,29 +15,17 @@ set -e
 #  rm text8.zip
 #fi
 
-CORPUS='/home/eirini/glove/CorpusNew/Krapivin2009_all'
-#$1
-#/home/eirini/glove/J-47.txt
-VOCAB_FILE="vocab-Krapivin2009-all-200.txt"
-#$2$3$4"
-#vocab.txt
+CORPUS=$1
+VOCAB_FILE="vocab.txt$2$3$4"
 COOCCURRENCE_FILE=cooccurrence.bin
-#cooccurrence.bin
 COOCCURRENCE_SHUF_FILE=cooccurrence.shuf.bin
-#cooccurrence.shuf.bin
 BUILDDIR=build
-SAVE_FILE="vectors-Krapivin2009-all-200"
-#$2$3$4"
-#vectors
+SAVE_FILE="vectors$2$3$4"
 VERBOSE=2
-MEMORY=4
+MEMORY=7.1
 VOCAB_MIN_COUNT=1
-VECTOR_SIZE=200
-#$3
-#1000
-MAX_ITER=50
-#$4
-#5000
+VECTOR_SIZE=$3
+MAX_ITER=$4
 WINDOW_SIZE=10
 BINARY=2
 NUM_THREADS=8
