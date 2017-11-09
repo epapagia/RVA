@@ -292,5 +292,5 @@ for fv, filev in enumerate(data_original_files):
         print 'mean precision strict', sum(prec_test_strict) / float(len(prec_test_strict))
         print 'mean recall strict', sum(rec_test_strict) / float(len(rec_test_strict))
         print 'mean f-measure strict', sum(fm_test_strict) / float(len(fm_test_strict))        
-    break        
+      
 
