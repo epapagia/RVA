@@ -12,7 +12,7 @@ $ git clone http://github.com/stanfordnlp/glove
 and then:
 $ cd glove && make
 
-Replace the existing demo.sh file in the glove project with the demo.sh file of the current project.
+Replace the existing demo.sh file in the glove project with the demo.sh file of the current project and add RVA.py also in the glove project.
 
 Run RVA.py providing in the code the folders with the corresponding fulltexts and abstracts, respectively.
 
