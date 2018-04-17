@@ -7,7 +7,7 @@ Prerequisites:
 Go to the project of GloVe: Global Vectors for Word Representation on Github, https://github.com/stanfordnlp/GloVe 
 
 Clone the project: 
-$ git clone http://github.com/stanfordnlp/glove
+$ git clone https://github.com/stanfordnlp/GloVe.git
 
 and then:
 $ cd glove && make
